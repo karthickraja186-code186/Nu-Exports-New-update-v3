@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0877bd">
+
+<title>NU Exports - Transport Management</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f3f6f9;
+  color:#26384a;
+}
+
+.wrap{
+  max-width:900px;
+  margin:auto;
+  padding:15px;
+}
+
+/* TOP */
+.header{
+  background:linear-gradient(135deg,#0877bd,#08a8d8);
+  color:white;
+  padding:22px;
+  border-radius:18px;
+  text-align:center;
+  margin-bottom:15px;
+}
+
+.header h1{
+  margin:0;
+  font-size:30px;
+}
+
+.header p{
+  margin:6px 0 0;
+  font-size:15px;
+}
+
+/* DASHBOARD */
+.dashboard{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.box{
+  background:white;
+  border-radius:14px;
+  padding:15px 8px;
+  text-align:center;
+  box-shadow:0 2px 8px #d5dce2;
+}
+
+.box strong{
+  display:block;
+  font-size:28px;
+  margin-top:5px;
+}
+
+.total strong{
+  color:#0877bd;
+}
+
+.pending strong{
+  color:#e49a00;
+}
+
+.delivered strong{
+  color:#159447;
+}
+
+/* CARD */
+.card{
+  background:white;
+  padding:18px;
+  border-radius:16px;
+  margin-bottom:15px;
+  box-shadow:0 2px 9px #d5dce2;
+}
+
+h2{
+  margin-top:0;
+  color:#31547c;
+}
+
+label{
+  display:block;
+  font-weight:bold;
+  margin-top:12px;
+  margin-bottom:5px;
+}
+
+input,select{
+  width:100%;
+  padding:13px;
+  border:1px solid #cbd4dc;
+  border-radius:9px;
+  font-size:16px;
+  background:white;
+}
+
+button{
+  border:0;
+  border-radius:9px;
+  padding:12px 16px;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.save{
+  width:100%;
+  margin-top:18px;
+  background:#0877bd;
+  color:white;
+}
+
+.search{
+  margin-top:5px;
+}
+
+/* TABLE */
+.tablebox{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:850px;
+}
+
+th,td{
+  padding:10px;
+  border-bottom:1px solid #ddd;
+  text-align:left;
+}
+
+th{
+  background:#0877bd;
+  color:white;
+}
+
+.status-pending{
+  color:#e49a00;
+  font-weight:bold;
+}
+
+.status-delivered{
+  color:#159447;
+  font-weight:bold;
+}
+
+.deliver-btn{
+  background:#159447;
+  color:white;
+  padding:7px 10px;
+  font-size:13px;
+}
+
+.pending-btn{
+  background:#e49a00;
+  color:white;
+  padding:7px 10px;
+  font-size:13px;
+}
+
+.delete-btn{
+  background:#d93636;
+  color:white;
+  padding:7px 10px;
+  font-size:13px;
+}
+
+.empty{
+  text-align:center;
+  color:#777;
+  padding:20px;
+}
+
+@media(max-width:600px){
+
+  .dashboard{
+    grid-template-columns:repeat(3,1fr);
+  }
+
+  .header h1{
+    font-size:25px;
+  }
+
+  .box{
+    font-size:13px;
+  }
+
+  .box strong{
+    font-size:24px;
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<!-- HEADER -->
+<div class="header">
+  <h1>NU EXPORTS</h1>
+  <p>Transport & Parcel Management</p>
+</div>
+
+
+<!-- DASHBOARD -->
+<div class="dashboard">
+
+  <div class="box total">
+    Total
+    <strong id="totalCount">0</strong>
+  </div>
+
+  <div class="box pending">
+    Pending
+    <strong id="pendingCount">0</strong>
+  </div>
+
+  <div class="box delivered">
+    Delivered
+    <strong id="deliveredCount">0</strong>
+  </div>
+
+</div>
+
+
+<!-- ADD PARCEL -->
+<div class="card">
+
+<h2>📦 Parcel Details</h2>
+
+<label>LR Number *</label>
+<input
+  type="text"
+  id="lr"
+  placeholder="Enter LR Number"
+>
+
+<label>Transport Name *</label>
+<input
+  type="text"
+  id="transport"
+  placeholder="Enter Transport Name"
+>
+
+<label>Number of Articles *</label>
+<input
+  type="number"
+  id="articles"
+  placeholder="Enter Number of Articles"
+  min="1"
+>
+
+<label>Freight Amount (₹)</label>
+<input
+  type="number"
+  id="freight"
+  placeholder="0"
+  min="0"
+>
+
+<label>Local Freight Amount (₹)</label>
+<input
+  type="number"
+  id="localFreight"
+  placeholder="0"
+  min="0"
+>
+
+<label>Booking Date *</label>
+<input
+  type="date"
+  id="bookingDate"
+>
+
+<label>Delivery Date</label>
+<input
+  type="date"
+  id="deliveryDate"
+>
+
+<label>Delivery Status</label>
+<select id="status">
+  <option value="Pending">Pending</option>
+  <option value="Delivered">Delivered</option>
+</select>
+
+<button class="save" onclick="saveParcel()">
+  💾 SAVE PARCEL
+</button>
+
+</div>
+
+
+<!-- SEARCH -->
+<div class="card">
+
+<h2>🔎 Search</h2>
+
+<input
+  class="search"
+  type="text"
+  id="search"
+  placeholder="Search LR Number or Transport Name..."
+  oninput="showParcels()"
+>
+
+</div>
+
+
+<!-- LIST -->
+<div class="card">
+
+<h2>📋 Parcel List</h2>
+
+<div class="tablebox">
+
+<table>
+
+<thead>
+<tr>
+<th>LR Number</th>
+<th>Transport</th>
+<th>Articles</th>
+<th>Freight</th>
+<th>Local Freight</th>
+<th>Booking</th>
+<th>Delivery</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="parcelList"></tbody>
+
+</table>
+
+</div>
+
+<div id="empty" class="empty">
+No parcel records found.
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+let parcels =
+JSON.parse(localStorage.getItem("NU_EXPORTS_DATA")) || [];
+
+
+/* SAVE DATA */
+function saveData(){
+
+  localStorage.setItem(
+    "NU_EXPORTS_DATA",
+    JSON.stringify(parcels)
+  );
+
+}
+
+
+/* SAVE PARCEL */
+function saveParcel(){
+
+  const lr =
+    document.getElementById("lr").value.trim();
+
+  const transport =
+    document.getElementById("transport").value.trim();
+
+  const articles =
+    document.getElementById("articles").value;
+
+  const freight =
+    document.getElementById("freight").value || 0;
+
+  const localFreight =
+    document.getElementById("localFreight").value || 0;
+
+  const bookingDate =
+    document.getElementById("bookingDate").value;
+
+  const deliveryDate =
+    document.getElementById("deliveryDate").value;
+
+  const status =
+    document.getElementById("status").value;
+
+
+  if(!lr){
+
+    alert("Please enter LR Number");
+
+    return;
+
+  }
+
+
+  if(!transport){
+
+    alert("Please enter Transport Name");
+
+    return;
+
+  }
+
+
+  if(!articles){
+
+    alert("Please enter Number of Articles");
+
+    return;
+
+  }
+
+
+  const parcel = {
+
+    id:Date.now(),
+
+    lr:lr,
+
+    transport:transport,
+
+    articles:Number(articles),
+
+    freight:Number(freight),
+
+    localFreight:Number(localFreight),
+
+    bookingDate:bookingDate,
+
+    deliveryDate:deliveryDate,
+
+    status:status
+
+  };
+
+
+  parcels.push(parcel);
+
+  saveData();
+
+  clearForm();
+
+  showParcels();
+
+  alert("Parcel saved successfully!");
+
+}
+
+
+/* CLEAR FORM */
+function clearForm(){
+
+  document.getElementById("lr").value="";
+  document.getElementById("transport").value="";
+  document.getElementById("articles").value="";
+  document.getElementById("freight").value="";
+  document.getElementById("localFreight").value="";
+  document.getElementById("bookingDate").value="";
+  document.getElementById("deliveryDate").value="";
+  document.getElementById("status").value="Pending";
+
+}
+
+
+/* SHOW PARCELS */
+function showParcels(){
+
+  const list =
+    document.getElementById("parcelList");
+
+  const search =
+    document.getElementById("search")
+    .value
+    .toLowerCase()
+    .trim();
+
+
+  list.innerHTML="";
+
+
+  const filtered =
+    parcels.filter(function(p){
+
+      return (
+
+        p.lr.toLowerCase().includes(search)
+
+        ||
+
+        p.transport.toLowerCase().includes(search)
+
+      );
+
+    });
+
+
+  document.getElementById("empty").style.display =
+    filtered.length ? "none" : "block";
+
+
+  filtered.forEach(function(p){
+
+    const row =
+      document.createElement("tr");
+
+
+    const statusClass =
+      p.status === "Pending"
+      ? "status-pending"
+      : "status-delivered";
+
+
+    row.innerHTML = `
+
+      <td>${safe(p.lr)}</td>
+
+      <td>${safe(p.transport)}</td>
+
+      <td>${p.articles}</td>
+
+      <td>₹${p.freight}</td>
+
+      <td>₹${p.localFreight}</td>
+
+      <td>${p.bookingDate || "-"}</td>
+
+      <td>${p.deliveryDate || "-"}</td>
+
+      <td class="${statusClass}">
+        ${p.status}
+      </td>
+
+      <td>
+
+        ${
+          p.status === "Pending"
+
+          ?
+
+          `<button
+            class="deliver-btn"
+            onclick="makeDelivered(${p.id})">
+            Delivered
+          </button>`
+
+          :
+
+          `<button
+            class="pending-btn"
+            onclick="makePending(${p.id})">
+            Pending
+          </button>`
+        }
+
+        <button
+          class="delete-btn"
+          onclick="deleteParcel(${p.id})">
+          Delete
+        </button>
+
+      </td>
+
+    `;
+
+
+    list.appendChild(row);
+
+  });
+
+
+  updateDashboard();
+
+}
+
+
+/* DELIVERED */
+function makeDelivered(id){
+
+  const p =
+    parcels.find(x => x.id === id);
+
+  if(p){
+
+    p.status="Delivered";
+
+    saveData();
+
+    showParcels();
+
+  }
+
+}
+
+
+/* PENDING */
+function makePending(id){
+
+  const p =
+    parcels.find(x => x.id === id);
+
+  if(p){
+
+    p.status="Pending";
+
+    saveData();
+
+    showParcels();
+
+  }
+
+}
+
+
+/* DELETE */
+function deleteParcel(id){
+
+  if(!confirm("Delete this parcel?")){
+
+    return;
+
+  }
+
+
+  parcels =
+    parcels.filter(x => x.id !== id);
+
+  saveData();
+
+  showParcels();
+
+}
+
+
+/* DASHBOARD */
+function updateDashboard(){
+
+  const total =
+    parcels.length;
+
+
+  const pending =
+    parcels.filter(
+      x => x.status === "Pending"
+    ).length;
+
+
+  const delivered =
+    parcels.filter(
+      x => x.status === "Delivered"
+    ).length;
+
+
+  document.getElementById(
+    "totalCount"
+  ).textContent = total;
+
+
+  document.getElementById(
+    "pendingCount"
+  ).textContent = pending;
+
+
+  document.getElementById(
+    "deliveredCount"
+  ).textContent = delivered;
+
+}
+
+
+/* SAFE TEXT */
+function safe(text){
+
+  return String(text || "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+/* START */
+showParcels();
+
+</script>
+
+</body>
+</html>
