@@ -5,9 +5,26 @@
 @page{size:A4 portrait;margin:8mm}
 @media print{html,body{background:#fff!important;color:#000!important;width:100%;margin:0!important;padding:0!important;font-size:10pt}.header,#drawer,.no-print,button,input,select,label{display:none!important}main.wrap{max-width:none!important;width:100%!important;margin:0!important;padding:0!important}.page{display:none!important}.page.active{display:block!important}.title{font-size:18pt;margin:0 0 8mm!important;color:#000!important}.card,.metric,.table,table{box-shadow:none!important;border:1px solid #bbb!important;border-radius:0!important;background:#fff!important;break-inside:avoid}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:3mm!important;margin-bottom:5mm}.metric{padding:3mm!important}.metric b{font-size:11pt!important;color:#000!important}table{width:100%!important;table-layout:auto!important;font-size:7.5pt!important}th,td{padding:3px 2px!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;color:#000!important}th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.table{overflow:visible!important}.small{color:#333!important}.report-print-heading{display:block!important;font-size:10pt;margin-bottom:5mm}}
 .report-print-heading{display:none}
+
+.login-overlay{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#062452,#0b4f9c);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{width:100%;max-width:390px;background:#fff;border-radius:18px;padding:26px;box-shadow:0 18px 55px #0003;color:#172b4d}
+.login-card h2{margin:0 0 6px;color:#082653}.login-card p{color:#64748b;font-size:14px}.login-card label{display:block;margin:12px 0 6px;font-weight:bold}
+.login-card button{width:100%;margin-top:16px}.login-error{color:#b91c1c;font-size:13px;min-height:18px}
 </style></head><body>
+
+<div id="loginOverlay" class="login-overlay">
+  <form class="login-card" onsubmit="event.preventDefault();loginOnline()">
+    <h2>NU EXPORTS</h2><p>Admin / Staff Login</p>
+    <label for="loginEmail">Login Email</label><input id="loginEmail" type="email" autocomplete="username" placeholder="Admin email" required>
+    <label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Enter password" required>
+    <button id="loginBtn" class="btn primary" type="submit">Login</button>
+    <div id="loginError" class="login-error"></div>
+    <p class="small">Sign-in accounts must first be created in Firebase Authentication.</p>
+  </form>
+</div>
+
 <div id="drawer" class="drawer" onclick="closeMenu()"><div class="drawerbox" onclick="event.stopPropagation()"><h2>☰ NU EXPORTS</h2><button class="nav" onclick="openPage('dashboard')">🏠 Dashboard</button><button class="nav" onclick="newBooking()">➕ New Booking</button><button class="nav" onclick="openPage('main')">📦 All Parcels</button><button class="nav" onclick="openPage('pendingPage')">⏳ Pending Parcels</button><button class="nav" onclick="openPage('deliveryPage')">✅ Delivery Parcels</button><button class="nav" onclick="openPage('dailyPage')">📅 Daily Delivery Report</button><button class="nav" onclick="openPage('weeklyPage')">📆 Weekly Report</button><button class="nav" onclick="openPage('monthlyPage')">🗓️ Monthly Report</button><button class="nav" onclick="openPage('reportPage')">🚚 Transport-wise Report</button><button class="nav" onclick="openPage('folderPage')">📁 Transport Folders</button><button class="nav" onclick="openPage('transportPage')">📝 Transport Names</button><button class="nav" onclick="openPage('settingsPage')">⚙️ Backup & Settings</button></div></div>
-<header class="header"><button class="menu" onclick="openMenu()">☰</button><div class="brand"><h1>NU EXPORTS</h1><small>Transport & Parcel Management</small></div></header><main class="wrap">
+<header class="header"><button class="menu" onclick="openMenu()">☰</button><div class="brand"><h1>NU EXPORTS</h1><small>Transport & Parcel Management</small></div><button class="btn secondary" style="margin-left:auto" onclick="logoutOnline()">Logout</button></header><main class="wrap">
 <section id="dashboard" class="page active"><div class="title">Dashboard</div><input id="smart" class="search" placeholder="🔎 Search LR Number or Transport..." oninput="smartSearch()"><div class="dashboard-actions"><button class="btn primary" onclick="newBooking()">➕ New Booking</button><button class="btn secondary" onclick="openPage('pendingPage')">⏳ Pending Parcels</button><button class="btn secondary" onclick="openPage('deliveryPage')">✅ Delivery Parcels</button></div><div class="cards"><div class="card stat" onclick="filterMain('all')">Total Parcels<div id="total" class="num">0</div></div><div class="card stat pending" onclick="filterMain('Pending')">Pending<div id="pend" class="num">0</div></div><div class="card stat delivered" onclick="openPage('deliveryPage')">Delivered<div id="del" class="num">0</div></div><div class="card stat rate">Success Rate<div id="rate" class="num">0%</div></div></div><div class="card"><h3>💰 Freight Summary</h3><div class="summary"><div>Current Freight<div id="freightTotal" class="big">₹0.00</div></div><div>Current Local Freight<div id="localTotal" class="big">₹0.00</div></div><div>Grand Total<div id="grand" class="big">₹0.00</div></div></div></div><div class="card"><h3>⚡ Quick Reports</h3><div class="quick"><div class="tile" onclick="dailyToday()">Today</div><div class="tile" onclick="dailyYesterday()">Yesterday</div><div class="tile" onclick="rangeReport('week')">This Week</div><div class="tile" onclick="rangeReport('month')">This Month</div></div></div><div class="summary"><div class="card"><div class="section-head"><h3>🕘 Recent Bookings</h3><button class="btn secondary" onclick="openPage('main')">View All</button></div><div class="table recent-table"><table><thead><tr><th>LR</th><th>Transport</th><th>Status</th><th>Action</th></tr></thead><tbody id="recentBody"></tbody></table></div></div><div class="card"><h3>🚚 Top Transports</h3><div id="topTransports"></div></div></div><div class="card"><h3>💼 Opening Balance</h3><label for="openingBInline">Enter Opening Balance (₹)</label><input id="openingBInline" type="number" min="0" step="0.01" placeholder="Enter single Opening Balance"><button class="btn primary" onclick="saveOpeningInline()">Save Opening Balance</button><p class="small">Freight Amount + Local Freight Amount will be deducted from this one balance.</p><label for="addBalanceInline">Add newly received amount (₹)</label><input id="addBalanceInline" type="number" min="0.01" step="0.01" placeholder="Enter amount to add"><button class="btn secondary" onclick="addOpeningInline()">➕ Add Amount to Existing Balance</button><div class="summary"><div>Opening Balance<div id="openB" class="big">₹0.00</div></div><div>Used (Freight + Local)<div id="openU" class="big">₹0.00</div></div><div>Remaining Balance<div id="openR" class="big">₹0.00</div></div></div></div><div id="reminder" class="card reminder"></div></section>
 <section id="main" class="page"><div class="title">📦 All Parcels</div><input id="mainSearch" class="search" placeholder="🔎 Search LR / Transport..." oninput="renderMain()"><button class="btn secondary" onclick="selectAllParcels(true)">Select All</button><button class="btn secondary" onclick="selectAllParcels(false)">Unselect All</button><button class="btn danger" onclick="deleteSelectedParcels()">Delete Selected</button><span id="mainSelectedCount" class="small">0 selected</span><div class="card"><div class="formgrid"><div><label>LR Number *</label><input id="lr"></div><div><label>Transport Name *</label><input id="transport" list="transports"><datalist id="transports"></datalist></div><div><label>Number of Articles *</label><input id="articles" type="number" min="1"></div><div><label>Freight Amount</label><input id="freight" type="number" min="0" value="0"></div><div><label>Local Freight Amount</label><input id="local" type="number" min="0" value="0"></div><div><label>Booking Date</label><input id="booking" type="date"></div><div><label>Delivery Date</label><input id="delivery" type="date"></div><div><label>Status</label><select id="status"><option>Pending</option><option>Delivered</option></select></div></div><br><button class="btn primary" onclick="saveParcel()">Save</button><button class="btn success" onclick="updateParcel()">Update</button><button class="btn danger" onclick="deleteSelected()">Delete</button><button class="btn secondary" onclick="clearForm()">Clear</button></div><div class="table"><table><thead><tr><th><input type="checkbox" id="selectAllParcelsBox" onchange="selectAllParcels(this.checked)" aria-label="Select all parcels"></th><th>LR</th><th>Transport</th><th>Articles</th><th>Freight</th><th>Local</th><th>Booking</th><th>Delivery</th><th>Status</th><th>Action</th></tr></thead><tbody id="mainBody"></tbody></table></div></section>
 <section id="pendingPage" class="page"><div class="title">⏳ Pending Parcels</div><input id="pendingSearch" class="search" placeholder="🔎 Search Pending..." oninput="renderPending()"><div class="table"><table><thead><tr><th>LR</th><th>Transport</th><th>Articles</th><th>Freight</th><th>Booking</th><th>Age</th><th>Action</th></tr></thead><tbody id="pendingBody"></tbody></table></div></section>
@@ -20,8 +37,83 @@
 <section id="transportPage" class="page"><div class="title">📝 Transport Names</div><div class="card"><label>New Transport Name</label><input id="newTransport"><button class="btn primary" onclick="addTransport()">Add Transport</button></div><div class="table"><table><thead><tr><th>Transport</th><th>Parcels</th><th>Action</th></tr></thead><tbody id="transportBody"></tbody></table></div></section>
 <section id="settingsPage" class="page"><div class="title">⚙️ Backup & Settings</div><div class="card"><h3>💾 Data Backup & Recovery</h3><button class="btn primary" onclick="backup()">Backup Data</button><label class="btn secondary" style="display:inline-block;cursor:pointer">Restore Data<input type="file" accept=".json" onchange="restore(event)" style="display:none"></label></div><div class="card"><h3>💰 Opening Balance</h3><label>Opening Balance</label><input id="openingB" type="number" min="0" step="0.01" placeholder="Enter Opening Balance"><p class="small">Freight Amount + Local Freight Amount will be deducted from this single balance.</p><button class="btn primary" onclick="saveOpening()">Save Opening Balance</button><label for="addBalance">Add newly received amount (₹)</label><input id="addBalance" type="number" min="0.01" step="0.01" placeholder="Enter amount to add"><button class="btn secondary" onclick="addOpening()">➕ Add Amount to Existing Balance</button></div></section>
 </main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script>
+
 const K='NU_EXPORTS_DATA',T='NU_EXPORTS_TRANSPORTS',O='NU_EXPORTS_OPENING_BALANCE';let selected=null,filter='all';
+let cloudReady=false, cloudWritePaused=false, currentUser=null, cloudUnsubscribe=null;
+const CLOUD_KEYS=[K,T,O];
+function firebaseConfigured(){
+  return typeof firebase!=='undefined' && window.NU_EXPORTS_FIREBASE_CONFIG &&
+    window.NU_EXPORTS_FIREBASE_CONFIG.apiKey &&
+    window.NU_EXPORTS_FIREBASE_CONFIG.apiKey!=='PASTE_API_KEY_HERE';
+}
+function setLoginError(msg){const el=document.getElementById('loginError');if(el)el.textContent=msg||'';}
+async function loginOnline(){
+  setLoginError('');
+  if(!firebaseConfigured()){setLoginError('Setup incomplete: edit firebase-config.js first.');return;}
+  const btn=$('loginBtn');btn.disabled=true;btn.textContent='Signing in...';
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(window.NU_EXPORTS_FIREBASE_CONFIG);
+    await firebase.auth().signInWithEmailAndPassword($('loginEmail').value.trim(),$('loginPassword').value);
+  }catch(e){setLoginError(e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found'?'Incorrect email or password.':(e.message||'Login failed.'));}
+  finally{btn.disabled=false;btn.textContent='Login';}
+}
+async function logoutOnline(){if(window.firebase&&firebase.apps.length)await firebase.auth().signOut();}
+async function startOnlineSession(user){
+  currentUser=user;
+  $('loginOverlay').style.display='none';
+  cloudReady=false;cloudWritePaused=true;
+  try{
+    const ref=firebase.firestore().collection('appData').doc('shared');
+    const snap=await ref.get();
+    if(snap.exists){
+      const obj=snap.data()||{};
+      CLOUD_KEYS.forEach(k=>{if(Object.prototype.hasOwnProperty.call(obj,k)&&typeof obj[k]==='string')localStorage.setItem(k,obj[k]);});
+    } else {
+      const initial={};CLOUD_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!==null)initial[k]=v;});
+      await ref.set(initial,{merge:true});
+    }
+    cloudWritePaused=false;cloudReady=true;
+    if(cloudUnsubscribe)cloudUnsubscribe();
+    cloudUnsubscribe=ref.onSnapshot(remoteSnap=>{
+      if(!remoteSnap.exists||!currentUser)return;
+      const remote=remoteSnap.data()||{};
+      cloudWritePaused=true;
+      CLOUD_KEYS.forEach(k=>{if(Object.prototype.hasOwnProperty.call(remote,k)&&typeof remote[k]==='string')localStorage.setItem(k,remote[k]);});
+      cloudWritePaused=false;
+      if(cloudReady)all();
+    },err=>console.error('Cloud listener error',err));
+    clearForm();all();
+  }catch(e){
+    cloudWritePaused=false;
+    $('loginOverlay').style.display='flex';
+    setLoginError('Cloud database access failed. Check Firestore setup/rules. '+(e.message||''));
+    await firebase.auth().signOut();
+  }
+}
+function installCloudSync(){
+  if(!firebaseConfigured())return;
+  if(!firebase.apps.length)firebase.initializeApp(window.NU_EXPORTS_FIREBASE_CONFIG);
+  firebase.auth().onAuthStateChanged(user=>{
+    if(user)startOnlineSession(user);
+    else {currentUser=null;cloudReady=false;$('loginOverlay').style.display='flex';}
+  });
+  const originalSet=Storage.prototype.setItem;
+  Storage.prototype.setItem=function(key,value){
+    originalSet.call(this,key,value);
+    if(CLOUD_KEYS.includes(key)&&cloudReady&&!cloudWritePaused&&currentUser){
+      const patch={};patch[key]=String(value);
+      firebase.firestore().collection('appData').doc('shared').set(patch,{merge:true})
+        .catch(e=>{console.error('Cloud save failed',e);alert('Cloud save failed. Check internet connection. Please do not close the app until checked.');});
+    }
+  };
+}
+
 const $=id=>document.getElementById(id),data=()=>{try{return JSON.parse(localStorage.getItem(K)||'[]')}catch(e){return[]}},trans=()=>{try{return JSON.parse(localStorage.getItem(T)||'[]')}catch(e){return[]}},save=x=>localStorage.setItem(K,JSON.stringify(x)),saveT=x=>localStorage.setItem(T,JSON.stringify(x));
 const money=x=>'₹'+Number(x||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}),today=()=>{let d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)},esc=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])),age=d=>Math.max(0,Math.floor((new Date(today())-new Date(d))/86400000));
 function openMenu(){$('drawer').classList.add('open')}function closeMenu(){$('drawer').classList.remove('open')}function openPage(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');closeMenu();if(id==='main')renderMain();if(id==='pendingPage')renderPending();if(id==='deliveryPage')renderDelivery();if(id==='dailyPage')renderDaily();if(id==='weeklyPage')renderPeriodReport('week');if(id==='monthlyPage')renderPeriodReport('month');if(id==='reportPage'){opts();renderReport()}if(id==='folderPage')renderFolders();if(id==='transportPage')renderTrans();if(id==='settingsPage')loadOpening()}
@@ -67,6 +159,6 @@ function backup(){let d={appName:'NU EXPORTS',version:'1.0',backupDate:new Date(
 function exportCSV(){let a=data().filter(p=>p.status==='Delivered'),rows=[['LR Number','Transport','Articles','Freight','Local Freight','Booking Date','Delivery Date'],...a.map(p=>[p.lrNumber,p.transportName,p.articles,p.freight,p.localFreight,p.bookingDate,p.deliveryDate])];let csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'),u=URL.createObjectURL(new Blob([csv],{type:'text/csv'})),x=document.createElement('a');x.href=u;x.download='NU_EXPORTS_Delivery_'+today()+'.csv';x.click();URL.revokeObjectURL(u)}
 function dashboardExtras(){let a=data().slice().sort((x,y)=>String(y.bookingDate||'').localeCompare(String(x.bookingDate||''))||Number(y.id||0)-Number(x.id||0));let recent=a.slice(0,5);$('recentBody').innerHTML=recent.length?recent.map(p=>`<tr><td>${esc(p.lrNumber)}</td><td>${esc(p.transportName)}</td><td><span class="badge ${(p.status||'Pending').toLowerCase()}">${esc(p.status||'Pending')}</span></td><td><button class="btn secondary" onclick="edit('${esc(p.id)}')">Edit</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">No bookings yet</td></tr>';let counts={};data().forEach(p=>{counts[p.transportName]=(counts[p.transportName]||0)+1});let top=Object.entries(counts).sort((x,y)=>y[1]-x[1]).slice(0,5);$('topTransports').innerHTML=top.length?top.map(([n,c],i)=>`<div class="transport-rank"><span>${i+1}. ${esc(n)}</span><span class="rank-count">${c} parcel${c===1?'':'s'}</span></div>`).join(''):'<div class="empty">Transport data will appear here</div>'}
 function dashboard(){let a=data(),p=a.filter(x=>x.status==='Pending'),d=a.filter(x=>x.status==='Delivered'),f=a.reduce((s,x)=>s+x.freight,0),l=a.reduce((s,x)=>s+x.localFreight,0);$('total').textContent=a.length;$('pend').textContent=p.length;$('del').textContent=d.length;$('rate').textContent=(a.length?Math.round(d.length/a.length*100):0)+'%';$('freightTotal').textContent=money(f);$('localTotal').textContent=money(l);$('grand').textContent=money(f+l);dashboardOpening();let old=p.filter(x=>age(x.bookingDate)>=10);$('reminder').innerHTML='<h3>🔔 10-Day Pending Reminder</h3>'+(old.length?old.map(x=>`<div>${esc(x.lrNumber)} — ${esc(x.transportName)} — <span class="alert">${age(x.bookingDate)} days pending</span></div>`).join(''):'<div class="small">No pending parcel has crossed 10 days.</div>')}
-function all(){dashboard();dashboardExtras();renderMain();renderPending();renderDelivery();renderFolders();renderTrans();opts();renderReport();renderPeriodReport('week');renderPeriodReport('month')}document.addEventListener('DOMContentLoaded',()=>{clearForm();all()});
+function all(){dashboard();dashboardExtras();renderMain();renderPending();renderDelivery();renderFolders();renderTrans();opts();renderReport();renderPeriodReport('week');renderPeriodReport('month')}document.addEventListener('DOMContentLoaded',()=>{if(firebaseConfigured())installCloudSync();else{setLoginError('Setup incomplete: edit firebase-config.js first.');$('loginOverlay').style.display='flex';}});
 window.newBooking=newBooking;
 </script></body></html>
