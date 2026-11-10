@@ -285,7 +285,25 @@ function exportExcelReport(type){
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,sheetName);
   const fileType=type==='opening'?'Opening_Balance':type==='transport'?'Transport_Wise':type.charAt(0).toUpperCase()+type.slice(1);
-  XLSX.writeFile(wb,'NU_EXPORTS_'+fileType+'_Report_'+today()+'.xlsx');
+  const fileName='NU_EXPORTS_'+fileType+'_Report_'+today()+'.xlsx';
+
+  // Android Chrome-friendly download: create the XLSX as a Blob and trigger a real link download.
+  try{
+    const binary=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+    const blob=new Blob([binary],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    link.href=url;
+    link.download=fileName;
+    link.style.display='none';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);link.remove();},2000);
+    alert(fileName+' download தொடங்கியது. Chrome Downloads-ல் பார்க்கவும்.');
+  }catch(err){
+    console.error('Excel export failed:',err);
+    alert('Excel download ஆகவில்லை: '+(err&&err.message?err.message:'Unknown error')+'. Internet connection மற்றும் Chrome Downloads அனுமதியைச் சரிபார்க்கவும்.');
+  }
 }
 function renderDaily(){let d=$('dailyDate').value,a=data().filter(p=>p.status==='Delivered'&&(!d||p.deliveryDate===d));let ar=a.reduce((s,p)=>s+p.articles,0),f=a.reduce((s,p)=>s+p.freight,0),l=a.reduce((s,p)=>s+p.localFreight,0);$('dp').textContent=a.length;$('da').textContent=ar;$('df').textContent=money(f);$('dl').textContent=money(l);$('dt').textContent=money(f+l);$('dailyBody').innerHTML=a.length?a.map(p=>`<tr><td>${esc(p.lrNumber)}</td><td>${esc(p.transportName)}</td><td>${p.articles}</td><td>${money(p.freight)}</td><td>${money(p.localFreight)}</td><td>${p.deliveryDate}</td></tr>`).join(''):`<tr><td colspan="6" class="empty">No delivery records</td></tr>`}function clearDaily(){$('dailyDate').value='';renderDaily()}
 function opts(){let a=trans();$('transports').innerHTML=a.map(x=>`<option value="${esc(x)}">`).join('');let s=$('reportTransport'),old=s.value;s.innerHTML='<option value="">All Transports</option>'+a.map(x=>`<option>${esc(x)}</option>`).join('');s.value=old}
