@@ -60,7 +60,7 @@
 <section id="openingHistoryPage" class="page"><div class="title">📜 Opening Balance History</div><div class="card"><h3>💰 Balance Summary</h3><div class="summary"><div>Current Opening Balance<div id="historyCurrent" class="big">₹0.00</div></div><div>Total Used<div id="historyUsed" class="big">₹0.00</div></div><div>Remaining Balance<div id="historyRemaining" class="big">₹0.00</div></div></div><p class="small">Every new amount added and every manual balance change will be recorded here.</p></div><div class="card"><div class="section-head"><h3>Transaction History</h3><div class="no-print"><button class="btn secondary" onclick="renderOpeningHistory()">Refresh</button><button class="btn secondary" onclick="exportExcelReport('opening')">📊 Export Excel</button></div></div><div class="table"><table><thead><tr><th>Date & Time</th><th>Activity</th><th>Amount</th><th>Balance After</th></tr></thead><tbody id="openingHistoryBody"></tbody></table></div></div></section>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" onerror="(function(){var s=document.createElement('script');s.src='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';document.head.appendChild(s)})()"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -311,22 +311,30 @@ function exportExcelReport(type){
   const fileType=type==='opening'?'Opening_Balance':type==='transport'?'Transport_Wise':type.charAt(0).toUpperCase()+type.slice(1);
   const fileName='NU_EXPORTS_'+fileType+'_Report_'+today()+'.xlsx';
 
-  // Android Chrome-friendly download: create the XLSX as a Blob and trigger a real link download.
+  // Android Chrome-friendly download with SheetJS writer first, then Blob-link fallback.
   try{
-    const binary=XLSX.write(wb,{bookType:'xlsx',type:'array'});
-    const blob=new Blob([binary],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    const url=URL.createObjectURL(blob);
-    const link=document.createElement('a');
-    link.href=url;
-    link.download=fileName;
-    link.style.display='none';
-    document.body.appendChild(link);
-    link.click();
-    setTimeout(()=>{URL.revokeObjectURL(url);link.remove();},2000);
-    alert(fileName+' download தொடங்கியது. Chrome Downloads-ல் பார்க்கவும்.');
+    if(!window.XLSX || !XLSX.writeFile) throw new Error('Excel library இன்னும் load ஆகவில்லை. Internet connection check செய்யவும்.');
+    try{
+      XLSX.writeFile(wb,fileName,{bookType:'xlsx',compression:true});
+    }catch(writeErr){
+      console.warn('writeFile fallback:',writeErr);
+      const binary=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+      const blob=new Blob([binary],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      const url=URL.createObjectURL(blob);
+      const link=document.createElement('a');
+      link.href=url;
+      link.download=fileName;
+      link.rel='noopener';
+      link.style.position='fixed';
+      link.style.left='-9999px';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(()=>{URL.revokeObjectURL(url);link.remove();},60000);
+    }
+    alert(fileName+' download தொடங்கியது. Chrome → Downloads பகுதியில் பார்க்கவும்.');
   }catch(err){
     console.error('Excel export failed:',err);
-    alert('Excel download ஆகவில்லை: '+(err&&err.message?err.message:'Unknown error')+'. Internet connection மற்றும் Chrome Downloads அனுமதியைச் சரிபார்க்கவும்.');
+    alert('Excel download ஆகவில்லை: '+(err&&err.message?err.message:'Unknown error')+'. Internet connection / Chrome Downloads அனுமதியைச் சரிபார்க்கவும்.');
   }
 }
 function renderDaily(){let d=$('dailyDate').value,a=data().filter(p=>p.status==='Delivered'&&(!d||p.deliveryDate===d));let ar=a.reduce((s,p)=>s+p.articles,0),f=a.reduce((s,p)=>s+p.freight,0),l=a.reduce((s,p)=>s+p.localFreight,0);$('dp').textContent=a.length;$('da').textContent=ar;$('df').textContent=money(f);$('dl').textContent=money(l);$('dt').textContent=money(f+l);$('dailyBody').innerHTML=a.length?a.map(p=>`<tr><td>${esc(p.lrNumber)}</td><td>${esc(p.transportName)}</td><td>${p.articles}</td><td>${money(p.freight)}</td><td>${money(p.localFreight)}</td><td>${p.deliveryDate}</td></tr>`).join(''):`<tr><td colspan="6" class="empty">No delivery records</td></tr>`}function clearDaily(){$('dailyDate').value='';renderDaily()}
