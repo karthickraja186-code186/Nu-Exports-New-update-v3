@@ -208,69 +208,137 @@ function excelPeriod(type){
   const key=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   return {from:key(start),to:today()};
 }
+function nuCrc32(buf){
+  let t=nuCrc32.t;
+  if(!t){t=nuCrc32.t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}}
+  let c=0xFFFFFFFF;
+  for(let i=0;i<buf.length;i++)c=t[(c^buf[i])&255]^(c>>>8);
+  return (c^0xFFFFFFFF)>>>0;
+}
+function nuZip(files,mime){
+  const enc=new TextEncoder(),chunks=[],central=[];let offset=0;
+  const u16=n=>[n&255,(n>>8)&255],u32=n=>[n&255,(n>>8)&255,(n>>16)&255,(n>>>24)&255];
+  files.forEach(f=>{
+    const name=enc.encode(f.name),data=enc.encode(f.text),crc=nuCrc32(data),size=data.length;
+    const local=new Uint8Array([0x50,0x4b,3,4,...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(size),...u32(size),...u16(name.length),...u16(0)]);
+    chunks.push(local,name,data);
+    central.push({name,crc,size,offset});
+    offset+=local.length+name.length+size;
+  });
+  const cds=[];let cdSize=0;
+  central.forEach(c=>{
+    const h=new Uint8Array([0x50,0x4b,1,2,...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(c.crc),...u32(c.size),...u32(c.size),...u16(c.name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(c.offset)]);
+    cds.push(h,c.name);cdSize+=h.length+c.name.length;
+  });
+  const end=new Uint8Array([0x50,0x4b,5,6,...u16(0),...u16(0),...u16(central.length),...u16(central.length),...u32(cdSize),...u32(offset),...u16(0)]);
+  return new Blob([...chunks,...cds,end],{type:mime});
+}
 function exportExcelReport(type){
   const allParcels=data();
   const parcelHeaders=['LR Number','Transport Name','Number of Articles','Freight Amount (₹)','Local Freight (₹)','Delivery Date'];
   const historyHeaders=['Date & Time','Activity','Amount Added / Changed (₹)','Balance After (₹)'];
-  let reportName='',dateLabel='',rows=[],headers=parcelHeaders,fileType=type;
+  let reportName='',dateLabel='',rows=[],headers=parcelHeaders,fileType=type,sheetName='Report';
+  const delivered=fn=>allParcels.filter(p=>p.status==='Delivered'&&fn(String(p.deliveryDate||'')));
   if(type==='daily'){
     const d=$('dailyDate')?$('dailyDate').value:'';
-    rows=allParcels.filter(p=>p.status==='Delivered'&&(!d||p.deliveryDate===d));
-    reportName='Daily Delivery Report';dateLabel='Date: '+(d?excelDateLabel(d):'All Dates');fileType='Daily';
+    rows=delivered(x=>!d||x===d);
+    reportName='Daily Report';dateLabel=d?excelDateLabel(d):'All Dates';fileType='Daily';sheetName='Daily Report';
   }else if(type==='daterange'){
     const from=$('rangeFrom').value,to=$('rangeTo').value;
     if(!from||!to){alert('From Date மற்றும் To Date தேர்வு செய்யவும்.');return;}
     if(from>to){alert('From Date, To Date-ஐ விட பின்னால் இருக்கக்கூடாது.');return;}
-    rows=allParcels.filter(p=>p.status==='Delivered'&&String(p.deliveryDate||'')>=from&&String(p.deliveryDate||'')<=to);
-    reportName='Date-to-Date Delivery Report';dateLabel='Period: '+excelDateLabel(from)+' to '+excelDateLabel(to);fileType='Date_to_Date';
+    rows=delivered(x=>x>=from&&x<=to);
+    reportName='Date to Date Report';dateLabel=excelDateLabel(from)+' to '+excelDateLabel(to);fileType='Date_to_Date';sheetName='Date to Date';
   }else if(type==='weekly'||type==='monthly'){
     const period=excelPeriod(type);
-    rows=allParcels.filter(p=>p.status==='Delivered'&&String(p.deliveryDate||'')>=period.from&&String(p.deliveryDate||'')<=period.to);
-    reportName=type==='weekly'?'Weekly Delivery Report':'Monthly Delivery Report';dateLabel='Period: '+excelDateLabel(period.from)+' to '+excelDateLabel(period.to);fileType=type==='weekly'?'Weekly':'Monthly';
+    rows=delivered(x=>x>=period.from&&x<=period.to);
+    reportName=type==='weekly'?'Weekly Report':'Monthly Report';dateLabel=excelDateLabel(period.from)+' to '+excelDateLabel(period.to);fileType=type==='weekly'?'Weekly':'Monthly';sheetName=reportName;
   }else if(type==='transport'){
-    const selectedTransport=$('reportTransport')?$('reportTransport').value:'';
-    rows=allParcels.filter(p=>!selectedTransport||p.transportName===selectedTransport);
-    reportName='Transport-wise Report';dateLabel='Transport: '+(selectedTransport||'All Transports');fileType='Transport_Wise';
+    const t=$('reportTransport')?$('reportTransport').value:'';
+    rows=allParcels.filter(p=>!t||p.transportName===t);
+    reportName='Transport-wise Report';dateLabel=t||'All Transports';fileType='Transport_Wise';sheetName='Transport-wise';
   }else if(type==='opening'){
     headers=historyHeaders;
     rows=openingHistory().map(x=>({'Date & Time':x.date||'','Activity':x.activity||'','Amount Added / Changed (₹)':Number(x.amount||0),'Balance After (₹)':Number(x.balance||0)}));
-    reportName='Opening Balance Report';dateLabel='Report Date: '+excelDateLabel(today())+' | Current Balance: '+money(opening().balance)+' | Used: '+money(usedOpening());fileType='Opening_Balance';
+    reportName='Opening Balance Report';dateLabel='Report Date: '+excelDateLabel(today())+' | Current Balance: '+money(opening().balance)+' | Used: '+money(usedOpening());fileType='Opening_Balance';sheetName='Opening Balance';
   }else{alert('Invalid report type.');return;}
 
-  // Excel-compatible HTML workbook: works without a third-party XLSX CDN/library.
-  const escCell=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const cell=(v,style='')=>'<td'+(style?' style="'+style+'"':'')+'>'+escCell(v)+'</td>';
-  const navy='background:#082653;color:#ffffff;font-weight:bold;font-size:18pt;text-align:center;padding:12px;';
-  const blue='background:#dceeff;color:#082653;font-weight:bold;text-align:center;padding:8px;';
-  const th='background:#0b4f9c;color:#ffffff;font-weight:bold;border:1px solid #082653;padding:8px;text-align:center;';
-  const td='border:1px solid #b8c7d9;padding:7px;';
-  let html='<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><table>';
-  html+='<tr><td colspan="'+headers.length+'" style="'+navy+'">NU EXPORTS</td></tr>';
-  html+='<tr><td colspan="'+headers.length+'" style="'+blue+'">'+escCell(reportName)+'</td></tr>';
-  html+='<tr><td colspan="'+headers.length+'" style="'+blue+'">'+escCell(dateLabel)+'</td></tr><tr><td colspan="'+headers.length+'">&nbsp;</td></tr>';
-  html+='<tr>'+headers.map(h=>'<th style="'+th+'">'+escCell(h)+'</th>').join('')+'</tr>';
+  const isOpening=type==='opening';
+  if(!isOpening){
+    // Delivery date order (oldest first); pending parcels without a date go last
+    rows=rows.slice().sort((a,b)=>String(a.deliveryDate||'9999').localeCompare(String(b.deliveryDate||'9999'))||String(a.lrNumber||'').localeCompare(String(b.lrNumber||''),undefined,{numeric:true}));
+    if(type==='daily')headers=parcelHeaders.slice(0,5);
+  }
+  const n=headers.length,L=i=>String.fromCharCode(65+i);
+  const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const fmt=v=>Number(v||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+  const out=[],merges=[];let r=0;
+  const addRow=(cells,ht)=>{
+    r++;
+    out.push('<row r="'+r+'" ht="'+ht+'" customHeight="1">'+cells.map((c,i)=>{
+      const ref=L(i)+r;
+      if(typeof c.v==='number')return '<c r="'+ref+'" s="'+c.s+'"><v>'+c.v+'</v></c>';
+      if(c.v===''||c.v==null)return '<c r="'+ref+'" s="'+c.s+'"/>';
+      return '<c r="'+ref+'" s="'+c.s+'" t="inlineStr"><is><t xml:space="preserve">'+esc(c.v)+'</t></is></c>';
+    }).join('')+'</row>');
+  };
+  const band=(text,s,ht)=>{addRow(Array.from({length:n},(_,i)=>({v:i===0?text:'',s})),ht);merges.push('A'+r+':'+L(n-1)+r);};
+  band('NU EXPORTS',1,44);
+  band(reportName,2,32);
+  band(dateLabel,2,32);
+  addRow(Array.from({length:n},()=>({v:'',s:0})),12);
+  addRow(headers.map(h=>({v:h,s:3})),36);
   if(rows.length){
     rows.forEach(p=>{
-      let vals=type==='opening'?headers.map(h=>p[h]??''):[p.lrNumber||'',p.transportName||'',Number(p.articles||0),Number(p.freight||0),Number(p.localFreight||0),p.deliveryDate||''];
-      html+='<tr>'+vals.map(v=>cell(v,td)).join('')+'</tr>';
+      if(isOpening)addRow([{v:p['Date & Time'],s:4},{v:p['Activity'],s:5},{v:p['Amount Added / Changed (₹)'],s:7},{v:p['Balance After (₹)'],s:7}],24);
+      else{
+        const c=[{v:p.lrNumber||'',s:4},{v:p.transportName||'',s:5},{v:Number(p.articles||0),s:6},{v:Number(p.freight||0),s:6},{v:Number(p.localFreight||0),s:6}];
+        if(n>5)c.push({v:excelDateLabel(p.deliveryDate),s:4});
+        addRow(c,24);
+      }
     });
-  }else html+='<tr>'+cell('No records found',td)+(headers.length>1?'<td colspan="'+(headers.length-1)+'" style="'+td+'"></td>':'')+'</tr>';
-  if(type==='opening'){
-    const added=rows.reduce((sum,x)=>sum+(String(x.Activity||'').toLowerCase().includes('added')?Number(x['Amount Added / Changed (₹)']||0):0),0);
-    html+='<tr>'+cell('Total Transactions: '+rows.length,blue)+cell('Total Added (₹): '+added.toFixed(2),blue)+cell('Current Balance (₹): '+Number(opening().balance||0).toFixed(2),blue)+cell('',blue)+'</tr>';
   }else{
-    const articles=rows.reduce((n,p)=>n+Number(p.articles||0),0),freight=rows.reduce((n,p)=>n+Number(p.freight||0),0),local=rows.reduce((n,p)=>n+Number(p.localFreight||0),0);
-    html+='<tr>'+cell('Total Parcels: '+rows.length,blue)+cell('',blue)+cell('Total Articles: '+articles,blue)+cell('Total Freight (₹): '+freight.toFixed(2),blue)+cell('Total Local Freight (₹): '+local.toFixed(2),blue)+(headers.length>5?cell('',blue):'')+'</tr>';
+    addRow(headers.map((h,i)=>({v:i===0?'No records found':'',s:4})),24);merges.push('A'+r+':'+L(n-1)+r);
   }
-  html+='</table></body></html>';
-  const blob=new Blob(['\ufeff',html],{type:'application/vnd.ms-excel;charset=utf-8'});
-  const fileName='NU_EXPORTS_'+fileType+'_Report_'+today()+'.xls';
+  if(isOpening){
+    const added=rows.reduce((s,x)=>s+(String(x['Activity']||'').toLowerCase().includes('added')?Number(x['Amount Added / Changed (₹)']||0):0),0);
+    addRow([{v:'Total Transactions : '+rows.length,s:8},{v:'Total Added : ₹ '+fmt(added),s:8},{v:'Current Balance : ₹ '+fmt(opening().balance),s:8},{v:'',s:8}],32);
+    merges.push('C'+r+':D'+r);
+  }else{
+    const ar=rows.reduce((s,p)=>s+Number(p.articles||0),0),fr=rows.reduce((s,p)=>s+Number(p.freight||0),0),lo=rows.reduce((s,p)=>s+Number(p.localFreight||0),0);
+    const c=[{v:'Total Parcels : '+rows.length,s:8},{v:'',s:8},{v:ar,s:9},{v:'Total Freight : ₹ '+fmt(fr),s:8},{v:'Total Local Freight : ₹ '+fmt(lo),s:8}];
+    if(n>5)c.push({v:'',s:8});
+    addRow(c,32);
+    merges.push('A'+r+':B'+r);
+  }
+  const widths=isOpening?[28,28,34,26]:[20,26,22,30,34,18].slice(0,n);
+  const NS='xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"';
+  const sheet='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet '+NS+'><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane ySplit="5" topLeftCell="A6" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="18"/><cols>'+widths.map((w,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>').join('')+'</cols><sheetData>'+out.join('')+'</sheetData><mergeCells count="'+merges.length+'">'+merges.map(m=>'<mergeCell ref="'+m+'"/>').join('')+'</mergeCells><pageMargins left="0.4" right="0.4" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="'+(n>5?'landscape':'portrait')+'" fitToWidth="1" fitToHeight="0"/></worksheet>';
+  const bd='<border><left style="thin"><color rgb="FF9FB3C8"/></left><right style="thin"><color rgb="FF9FB3C8"/></right><top style="thin"><color rgb="FF9FB3C8"/></top><bottom style="thin"><color rgb="FF9FB3C8"/></bottom><diagonal/></border>';
+  const fnt=(b,sz,rgb)=>'<font>'+(b?'<b/>':'')+'<sz val="'+sz+'"/><color rgb="'+rgb+'"/><name val="Calibri"/></font>';
+  const fill=rgb=>'<fill><patternFill patternType="solid"><fgColor rgb="'+rgb+'"/><bgColor indexed="64"/></patternFill></fill>';
+  const xf=(num,font,fl,bdr,al)=>'<xf numFmtId="'+num+'" fontId="'+font+'" fillId="'+fl+'" borderId="'+bdr+'" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment '+al+'/></xf>';
+  const C='horizontal="center" vertical="center"';
+  const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet '+NS+'><fonts count="6">'+fnt(0,11,'FF000000')+fnt(1,24,'FFFFFFFF')+fnt(1,18,'FF002F6C')+fnt(1,12,'FFFFFFFF')+fnt(1,12,'FF002F6C')+fnt(0,12,'FF000000')+'</fonts><fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>'+fill('FF002F6C')+fill('FFDAE8FA')+'</fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>'+bd+'</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="10">'
+    +xf(0,0,0,0,C)+xf(0,1,2,0,C)+xf(0,2,3,0,C)+xf(0,3,2,1,C+' wrapText="1"')+xf(0,5,0,1,C)+xf(0,5,0,1,'horizontal="left" vertical="center" indent="1"')+xf(3,5,0,1,C)+xf(4,5,0,1,C)+xf(0,4,3,1,C+' wrapText="1"')+xf(3,4,3,1,C)
+    +'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+  const R='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const files=[
+    {name:'[Content_Types].xml',text:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
+    {name:'_rels/.rels',text:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="'+R+'/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+    {name:'xl/workbook.xml',text:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook '+NS+' xmlns:r="'+R+'"><sheets><sheet name="'+esc(sheetName)+'" sheetId="1" r:id="rId1"/></sheets></workbook>'},
+    {name:'xl/_rels/workbook.xml.rels',text:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="'+R+'/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="'+R+'/styles" Target="styles.xml"/></Relationships>'},
+    {name:'xl/styles.xml',text:styles},
+    {name:'xl/worksheets/sheet1.xml',text:sheet}
+  ];
+  const fileName='NU_EXPORTS_'+fileType+'_Report_'+today()+'.xlsx';
   try{
+    const blob=nuZip(files,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     const url=URL.createObjectURL(blob),a=document.createElement('a');
     a.href=url;a.download=fileName;a.style.display='none';document.body.appendChild(a);a.click();
     setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},30000);
     alert(fileName+' download தொடங்கியது. Chrome Downloads-ல் பார்க்கவும்.');
-  }catch(err){console.error(err);alert('Excel download தொடங்கவில்லை. Chrome-ல் இந்த தளத்திற்கான Downloads அனுமதியைச் சரிபார்க்கவும்.');}
+  }catch(err){console.error(err);alert('Excel download தொடங்கவில்லை: '+(err&&err.message?err.message:'')+'. Chrome-ல் Downloads அனுமதியைச் சரிபார்க்கவும்.');}
 }
 function renderDaily(){let d=$('dailyDate').value,a=data().filter(p=>p.status==='Delivered'&&(!d||p.deliveryDate===d));let ar=a.reduce((s,p)=>s+p.articles,0),f=a.reduce((s,p)=>s+p.freight,0),l=a.reduce((s,p)=>s+p.localFreight,0);$('dp').textContent=a.length;$('da').textContent=ar;$('df').textContent=money(f);$('dl').textContent=money(l);$('dt').textContent=money(f+l);$('dailyBody').innerHTML=a.length?a.map(p=>`<tr><td>${esc(p.lrNumber)}</td><td>${esc(p.transportName)}</td><td>${p.articles}</td><td>${money(p.freight)}</td><td>${money(p.localFreight)}</td><td>${p.deliveryDate}</td></tr>`).join(''):`<tr><td colspan="6" class="empty">No delivery records</td></tr>`}function clearDaily(){$('dailyDate').value='';renderDaily()}
 function renderDateRange(){const from=$('rangeFrom').value,to=$('rangeTo').value;let a=data().filter(p=>p.status==='Delivered'&&(!from||String(p.deliveryDate||'')>=from)&&(!to||String(p.deliveryDate||'')<=to));if(from&&to&&from>to){$('dateRangeBody').innerHTML='<tr><td colspan="6" class="empty">From Date must be before To Date</td></tr>';return;}const ar=a.reduce((n,p)=>n+Number(p.articles||0),0),f=a.reduce((n,p)=>n+Number(p.freight||0),0),l=a.reduce((n,p)=>n+Number(p.localFreight||0),0);$('xdp').textContent=a.length;$('xda').textContent=ar;$('xdf').textContent=money(f);$('xdl').textContent=money(l);$('xdt').textContent=money(f+l);$('dateRangeBody').innerHTML=a.length?a.map(p=>`<tr><td>${esc(p.lrNumber)}</td><td>${esc(p.transportName)}</td><td>${Number(p.articles||0)}</td><td>${money(p.freight)}</td><td>${money(p.localFreight)}</td><td>${esc(p.deliveryDate||'')}</td></tr>`).join(''):'<tr><td colspan="6" class="empty">No delivery records for this date range</td></tr>';}
