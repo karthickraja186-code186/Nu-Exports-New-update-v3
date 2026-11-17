@@ -44,13 +44,14 @@
   </form>
 </div>
 
-<div id="drawer" class="drawer" onclick="closeMenu()"><div class="drawerbox" onclick="event.stopPropagation()"><h2>☰ NU EXPORTS</h2><button class="nav" onclick="openPage('dashboard')">🏠 Dashboard</button><button class="nav" onclick="newBooking()">➕ New Booking</button><button class="nav" onclick="openPage('main')">📦 All Parcels</button><button class="nav" onclick="openPage('pendingPage')">⏳ Pending Parcels</button><button class="nav" onclick="openPage('deliveryPage')">✅ Delivery Parcels</button><button class="nav" onclick="openPage('dailyPage')">📅 Daily Delivery Report</button><button class="nav" onclick="openPage('weeklyPage')">📆 Weekly Report</button><button class="nav" onclick="openPage('monthlyPage')">🗓️ Monthly Report</button><button class="nav" onclick="openPage('reportPage')">🚚 Transport-wise Report</button><button class="nav" onclick="openPage('folderPage')">📁 Transport Folders</button><button class="nav" onclick="openPage('transportPage')">📝 Transport Names</button><button class="nav" onclick="openPage('settingsPage')">⚙️ Backup & Settings</button><button class="nav" onclick="openPage('openingHistoryPage')">📜 Opening Balance History</button></div></div>
+<div id="drawer" class="drawer" onclick="closeMenu()"><div class="drawerbox" onclick="event.stopPropagation()"><h2>☰ NU EXPORTS</h2><button class="nav" onclick="openPage('dashboard')">🏠 Dashboard</button><button class="nav" onclick="newBooking()">➕ New Booking</button><button class="nav" onclick="openPage('main')">📦 All Parcels</button><button class="nav" onclick="openPage('pendingPage')">⏳ Pending Parcels</button><button class="nav" onclick="openPage('deliveryPage')">✅ Delivery Parcels</button><button class="nav" onclick="openPage('dailyPage')">📅 Daily Delivery Report</button><button class="nav" onclick="openPage('dateRangePage')">🗓️ Date-to-Date Report</button><button class="nav" onclick="openPage('weeklyPage')">📆 Weekly Report</button><button class="nav" onclick="openPage('monthlyPage')">🗓️ Monthly Report</button><button class="nav" onclick="openPage('reportPage')">🚚 Transport-wise Report</button><button class="nav" onclick="openPage('folderPage')">📁 Transport Folders</button><button class="nav" onclick="openPage('transportPage')">📝 Transport Names</button><button class="nav" onclick="openPage('settingsPage')">⚙️ Backup & Settings</button><button class="nav" onclick="openPage('openingHistoryPage')">📜 Opening Balance History</button></div></div>
 <header class="header"><button class="menu" onclick="openMenu()">☰</button><div class="brand"><h1>NU EXPORTS</h1><small>Transport & Parcel Management</small></div><button class="btn secondary" style="margin-left:auto" onclick="logoutOnline()">Logout</button></header><main class="wrap">
 <section id="dashboard" class="page active"><div class="dashboard-search-wrap"><span class="dashboard-search-icon">⌕</span><input id="smart" class="search" placeholder="Search by LR Number or Transport Name..." oninput="smartSearch()" aria-label="Search by LR Number or Transport Name"><button class="dashboard-search-clear" type="button" onclick="clearDashboardSearch()" aria-label="Clear search">×</button></div><div class="dashboard-actions"><button class="btn primary" onclick="newBooking()">➕ New Booking</button><button class="btn secondary" onclick="openPage('pendingPage')">⏳ Pending Parcels</button><button class="btn secondary" onclick="openPage('deliveryPage')">✅ Delivery Parcels</button></div><div class="cards"><div class="card stat" onclick="filterMain('all')">Total Parcels<div id="total" class="num">0</div></div><div class="card stat pending" onclick="filterMain('Pending')">Pending<div id="pend" class="num">0</div></div><div class="card stat delivered" onclick="openPage('deliveryPage')">Delivered<div id="del" class="num">0</div></div><div class="card stat rate">Success Rate<div id="rate" class="num">0%</div></div></div><div class="card"><h3>💰 Freight Summary</h3><div class="summary"><div>Current Freight<div id="freightTotal" class="big">₹0.00</div></div><div>Current Local Freight<div id="localTotal" class="big">₹0.00</div></div><div>Grand Total<div id="grand" class="big">₹0.00</div></div></div></div><div class="card"><h3>⚡ Quick Reports</h3><div class="quick"><div class="tile" onclick="dailyToday()">Today</div><div class="tile" onclick="dailyYesterday()">Yesterday</div><div class="tile" onclick="rangeReport('week')">This Week</div><div class="tile" onclick="rangeReport('month')">This Month</div></div></div><div class="summary"><div class="card"><div class="section-head"><h3>🕘 Recent Bookings</h3><button class="btn secondary" onclick="openPage('main')">View All</button></div><div class="table recent-table"><table><thead><tr><th>LR</th><th>Transport</th><th>Status</th><th>Action</th></tr></thead><tbody id="recentBody"></tbody></table></div></div><div class="card"><h3>🚚 Top Transports</h3><div id="topTransports"></div></div></div><div class="card"><h3>💼 Opening Balance</h3><label for="openingBInline">Enter Opening Balance (₹)</label><input id="openingBInline" type="number" min="0" step="0.01" placeholder="Enter single Opening Balance"><button class="btn primary" onclick="saveOpeningInline()">Save Opening Balance</button><p class="small">Freight Amount + Local Freight Amount will be deducted from this one balance.</p><label for="addBalanceInline">Add newly received amount (₹)</label><input id="addBalanceInline" type="number" min="0.01" step="0.01" placeholder="Enter amount to add"><button class="btn secondary" onclick="addOpeningInline()">➕ Add Amount to Existing Balance</button><div class="summary"><div>Opening Balance<div id="openB" class="big">₹0.00</div></div><div>Used (Freight + Local)<div id="openU" class="big">₹0.00</div></div><div>Remaining Balance<div id="openR" class="big">₹0.00</div></div></div></div><div id="reminder" class="card reminder"></div></section>
 <section id="main" class="page"><div class="title">📦 All Parcels</div><input id="mainSearch" class="search" placeholder="🔎 Search LR / Transport..." oninput="renderMain()"><button class="btn secondary" onclick="selectAllParcels(true)">Select All</button><button class="btn secondary" onclick="selectAllParcels(false)">Unselect All</button><button class="btn danger" onclick="deleteSelectedParcels()">Delete Selected</button><span id="mainSelectedCount" class="small">0 selected</span><div class="card"><div class="formgrid"><div><label>LR Number *</label><input id="lr"></div><div><label>Transport Name *</label><input id="transport" list="transports"><datalist id="transports"></datalist></div><div><label>Number of Articles *</label><input id="articles" type="number" min="1"></div><div><label>Freight Amount</label><input id="freight" type="number" min="0" value="0"></div><div><label>Local Freight Amount</label><input id="local" type="number" min="0" value="0"></div><div><label>Booking Date</label><input id="booking" type="date"></div><div><label>Delivery Date</label><input id="delivery" type="date"></div><div><label>Status</label><select id="status"><option>Pending</option><option>Delivered</option></select></div></div><br><button class="btn primary" onclick="saveParcel()">Save</button><button class="btn success" onclick="updateParcel()">Update</button><button class="btn danger" onclick="deleteSelected()">Delete</button><button class="btn secondary" onclick="clearForm()">Clear</button></div><div class="table"><table><thead><tr><th><input type="checkbox" id="selectAllParcelsBox" onchange="selectAllParcels(this.checked)" aria-label="Select all parcels"></th><th>LR</th><th>Transport</th><th>Articles</th><th>Freight</th><th>Local</th><th>Booking</th><th>Delivery</th><th>Status</th><th>Action</th></tr></thead><tbody id="mainBody"></tbody></table></div></section>
 <section id="pendingPage" class="page"><div class="title">⏳ Pending Parcels</div><input id="pendingSearch" class="search" placeholder="🔎 Search Pending..." oninput="renderPending()"><div class="table"><table><thead><tr><th>LR</th><th>Transport</th><th>Articles</th><th>Freight</th><th>Booking</th><th>Age</th><th>Action</th></tr></thead><tbody id="pendingBody"></tbody></table></div></section>
 <section id="deliveryPage" class="page"><div class="title">✅ Delivery Parcels</div><input id="deliverySearch" class="search" placeholder="🔎 Search Delivered..." oninput="renderDelivery()"><button class="btn primary" onclick="exportCSV()">Export Delivery CSV</button><button class="btn secondary" onclick="selectAllDelivered(true)">Select All</button><button class="btn secondary" onclick="selectAllDelivered(false)">Unselect All</button><button class="btn danger" onclick="deleteSelectedDelivered()">Delete Selected</button><span id="deliverySelectedCount" class="small">0 selected</span><div class="table"><table><thead><tr><th><input type="checkbox" id="selectAllDeliveredBox" onchange="selectAllDelivered(this.checked)" aria-label="Select all delivered parcels"></th><th>LR</th><th>Transport</th><th>Articles</th><th>Freight</th><th>Local</th><th>Booking</th><th>Delivery</th><th>Action</th></tr></thead><tbody id="deliveryBody"></tbody></table></div></section>
 <section id="dailyPage" class="page"><div class="title">📅 Daily Delivery Report</div><div class="report-print-heading">NU EXPORTS — Daily Delivery Report</div><div class="no-print"><button class="btn primary" onclick="printReport('daily')">🖨️ Print A4</button><button class="btn success" onclick="printReport('daily')">📄 Download PDF</button><button class="btn secondary" onclick="exportExcelReport('daily')">📊 Export Excel</button></div><div class="card"><label>Delivery Date</label><input id="dailyDate" type="date" onchange="renderDaily()"><button class="btn secondary" onclick="clearDaily()">Clear Date</button></div><div class="metrics"><div class="metric">Parcels<b id="dp">0</b></div><div class="metric">Articles<b id="da">0</b></div><div class="metric">Freight<b id="df">₹0</b></div><div class="metric">Local<b id="dl">₹0</b></div><div class="metric">Total<b id="dt">₹0</b></div></div><br><div class="table"><table><thead><tr><th>LR</th><th>Transport</th><th>Articles</th><th>Freight</th><th>Local</th><th>Delivery Date</th></tr></thead><tbody id="dailyBody"></tbody></table></div></section>
+<section id="dateRangePage" class="page"><div class="title">🗓️ Date-to-Date Delivery Report</div><div class="report-print-heading">NU EXPORTS — Date-to-Date Delivery Report</div><div class="card"><div class="formgrid"><div><label for="rangeFrom">From Date</label><input id="rangeFrom" type="date" onchange="renderDateRange()"></div><div><label for="rangeTo">To Date</label><input id="rangeTo" type="date" onchange="renderDateRange()"></div></div><button class="btn primary" onclick="renderDateRange()">Show Report</button><button class="btn secondary" onclick="clearDateRange()">Clear Dates</button><button class="btn success" onclick="exportExcelReport('daterange')">📊 Export Excel</button><p class="small">Delivered parcels within the selected delivery-date range.</p></div><div class="metrics"><div class="metric">Parcels<b id="xdp">0</b></div><div class="metric">Articles<b id="xda">0</b></div><div class="metric">Freight<b id="xdf">₹0</b></div><div class="metric">Local<b id="xdl">₹0</b></div><div class="metric">Total<b id="xdt">₹0</b></div></div><br><div class="table"><table><thead><tr><th>LR Number</th><th>Transport Name</th><th>Articles</th><th>Freight (₹)</th><th>Local Freight (₹)</th><th>Delivery Date</th></tr></thead><tbody id="dateRangeBody"></tbody></table></div></section>
 <section id="weeklyPage" class="page"><div class="title">📆 Weekly Delivery Report</div><div class="report-print-heading">NU EXPORTS — Weekly Delivery Report</div><div class="no-print"><button class="btn primary" onclick="printReport('weekly')">🖨️ Print A4</button><button class="btn success" onclick="printReport('weekly')">📄 Download PDF</button><button class="btn secondary" onclick="exportExcelReport('weekly')">📊 Export Excel</button></div><div class="card"><p class="small">Current week: Monday to today. Delivered parcels only.</p><div class="metrics"><div class="metric">Parcels<b id="wp">0</b></div><div class="metric">Articles<b id="wa">0</b></div><div class="metric">Freight<b id="wf">₹0</b></div><div class="metric">Local<b id="wl">₹0</b></div><div class="metric">Total<b id="wt">₹0</b></div></div></div><div class="table"><table><thead><tr><th>LR</th><th>Transport</th><th>Articles</th><th>Freight</th><th>Local</th><th>Delivery Date</th></tr></thead><tbody id="weeklyBody"></tbody></table></div></section>
 <section id="monthlyPage" class="page"><div class="title">🗓️ Monthly Delivery Report</div><div class="report-print-heading">NU EXPORTS — Monthly Delivery Report</div><div class="no-print"><button class="btn primary" onclick="printReport('monthly')">🖨️ Print A4</button><button class="btn success" onclick="printReport('monthly')">📄 Download PDF</button><button class="btn secondary" onclick="exportExcelReport('monthly')">📊 Export Excel</button></div><div class="card"><p class="small">Current month. Delivered parcels only.</p><div class="metrics"><div class="metric">Parcels<b id="mp">0</b></div><div class="metric">Articles<b id="ma">0</b></div><div class="metric">Freight<b id="mf">₹0</b></div><div class="metric">Local<b id="ml">₹0</b></div><div class="metric">Total<b id="mt">₹0</b></div></div></div><div class="table"><table><thead><tr><th>LR</th><th>Transport</th><th>Articles</th><th>Freight</th><th>Local</th><th>Delivery Date</th></tr></thead><tbody id="monthlyBody"></tbody></table></div></section>
 <section id="reportPage" class="page"><div class="title">🚚 Transport-wise Report</div><div class="report-print-heading">NU EXPORTS — Transport-wise Report</div><div class="no-print"><button class="btn primary" onclick="printReport('transport')">🖨️ Print A4</button><button class="btn success" onclick="printReport('transport')">📄 Download PDF</button><button class="btn secondary" onclick="exportExcelReport('transport')">📊 Export Excel</button></div><div class="card"><label>Transport</label><select id="reportTransport" onchange="renderReport()"><option value="">All Transports</option></select></div><div class="metrics"><div class="metric">Parcels<b id="rp">0</b></div><div class="metric">Pending<b id="rpen">0</b></div><div class="metric">Delivered<b id="rdel">0</b></div><div class="metric">Freight<b id="rf">₹0</b></div><div class="metric">Local<b id="rl">₹0</b></div></div><br><div class="table"><table><thead><tr><th>LR</th><th>Articles</th><th>Freight</th><th>Local</th><th>Status</th></tr></thead><tbody id="reportBody"></tbody></table></div></section>
@@ -60,7 +61,7 @@
 <section id="openingHistoryPage" class="page"><div class="title">📜 Opening Balance History</div><div class="card"><h3>💰 Balance Summary</h3><div class="summary"><div>Current Opening Balance<div id="historyCurrent" class="big">₹0.00</div></div><div>Total Used<div id="historyUsed" class="big">₹0.00</div></div><div>Remaining Balance<div id="historyRemaining" class="big">₹0.00</div></div></div><p class="small">Every new amount added and every manual balance change will be recorded here.</p></div><div class="card"><div class="section-head"><h3>Transaction History</h3><div class="no-print"><button class="btn secondary" onclick="renderOpeningHistory()">Refresh</button><button class="btn secondary" onclick="exportExcelReport('opening')">📊 Export Excel</button></div></div><div class="table"><table><thead><tr><th>Date & Time</th><th>Activity</th><th>Amount</th><th>Balance After</th></tr></thead><tbody id="openingHistoryBody"></tbody></table></div></div></section>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" onerror="(function(){var s=document.createElement('script');s.src='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';document.head.appendChild(s)})()"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -142,7 +143,7 @@ function installCloudSync(){
 
 const $=id=>document.getElementById(id),data=()=>{try{return JSON.parse(localStorage.getItem(K)||'[]')}catch(e){return[]}},trans=()=>{try{return JSON.parse(localStorage.getItem(T)||'[]')}catch(e){return[]}},save=x=>localStorage.setItem(K,JSON.stringify(x)),saveT=x=>localStorage.setItem(T,JSON.stringify(x));
 const money=x=>'₹'+Number(x||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}),today=()=>{let d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)},esc=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])),age=d=>Math.max(0,Math.floor((new Date(today())-new Date(d))/86400000));
-function openMenu(){$('drawer').classList.add('open')}function closeMenu(){$('drawer').classList.remove('open')}function openPage(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');closeMenu();if(id==='main')renderMain();if(id==='pendingPage')renderPending();if(id==='deliveryPage')renderDelivery();if(id==='dailyPage')renderDaily();if(id==='weeklyPage')renderPeriodReport('week');if(id==='monthlyPage')renderPeriodReport('month');if(id==='reportPage'){opts();renderReport()}if(id==='folderPage')renderFolders();if(id==='transportPage')renderTrans();if(id==='settingsPage')loadOpening();if(id==='openingHistoryPage')renderOpeningHistory()}
+function openMenu(){$('drawer').classList.add('open')}function closeMenu(){$('drawer').classList.remove('open')}function openPage(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');closeMenu();if(id==='main')renderMain();if(id==='pendingPage')renderPending();if(id==='deliveryPage')renderDelivery();if(id==='dailyPage')renderDaily();if(id==='dateRangePage')renderDateRange();if(id==='weeklyPage')renderPeriodReport('week');if(id==='monthlyPage')renderPeriodReport('month');if(id==='reportPage'){opts();renderReport()}if(id==='folderPage')renderFolders();if(id==='transportPage')renderTrans();if(id==='settingsPage')loadOpening();if(id==='openingHistoryPage')renderOpeningHistory()}
 function clearForm(){selected=null;$('lr').value='';$('transport').value='';$('articles').value='';$('freight').value=0;$('local').value=0;$('booking').value=today();$('delivery').value='';$('status').value='Pending'}
 function form(){return{lrNumber:$('lr').value.trim(),transportName:$('transport').value.trim(),articles:+$('articles').value||0,freight:+$('freight').value||0,localFreight:+$('local').value||0,bookingDate:$('booking').value||today(),deliveryDate:$('delivery').value||'',status:$('status').value}}
 function duplicate(lr,id){return data().some(p=>String(p.lrNumber||'').toLowerCase()===lr.toLowerCase()&&p.id!==id)}function addT(n){if(!n)return;let a=trans();if(!a.some(x=>x.toLowerCase()===n.toLowerCase())){a.push(n);a.sort();saveT(a);opts()}}
@@ -203,141 +204,72 @@ function excelPeriod(type){
   return {from:key(start),to:today()};
 }
 function exportExcelReport(type){
-  if(typeof XLSX==='undefined'){
-    alert('Excel library load ஆகவில்லை. Internet connection check செய்து மீண்டும் முயற்சிக்கவும்.');
-    return;
-  }
   const allParcels=data();
-  const parcelHeaders=['LR Number','Transport Name','Number of Articles','Freight Amount (₹)','Local Freight (₹)'];
+  const parcelHeaders=['LR Number','Transport Name','Number of Articles','Freight Amount (₹)','Local Freight (₹)','Delivery Date'];
   const historyHeaders=['Date & Time','Activity','Amount Added / Changed (₹)','Balance After (₹)'];
-  let reportName='',dateLabel='',rows=[],headers=[],sheetName='Report',totals=null;
-
+  let reportName='',dateLabel='',rows=[],headers=parcelHeaders,fileType=type;
   if(type==='daily'){
-    const selectedDate=$('dailyDate')?$('dailyDate').value:'';
-    rows=allParcels.filter(p=>p.status==='Delivered'&&(!selectedDate||p.deliveryDate===selectedDate));
-    reportName='Daily Delivery Report';
-    dateLabel='Date: '+(selectedDate?excelDateLabel(selectedDate):'All Dates');
-    headers=parcelHeaders;sheetName='Daily Report';
+    const d=$('dailyDate')?$('dailyDate').value:'';
+    rows=allParcels.filter(p=>p.status==='Delivered'&&(!d||p.deliveryDate===d));
+    reportName='Daily Delivery Report';dateLabel='Date: '+(d?excelDateLabel(d):'All Dates');fileType='Daily';
+  }else if(type==='daterange'){
+    const from=$('rangeFrom').value,to=$('rangeTo').value;
+    if(!from||!to){alert('From Date மற்றும் To Date தேர்வு செய்யவும்.');return;}
+    if(from>to){alert('From Date, To Date-ஐ விட பின்னால் இருக்கக்கூடாது.');return;}
+    rows=allParcels.filter(p=>p.status==='Delivered'&&String(p.deliveryDate||'')>=from&&String(p.deliveryDate||'')<=to);
+    reportName='Date-to-Date Delivery Report';dateLabel='Period: '+excelDateLabel(from)+' to '+excelDateLabel(to);fileType='Date_to_Date';
   }else if(type==='weekly'||type==='monthly'){
     const period=excelPeriod(type);
     rows=allParcels.filter(p=>p.status==='Delivered'&&String(p.deliveryDate||'')>=period.from&&String(p.deliveryDate||'')<=period.to);
-    reportName=type==='weekly'?'Weekly Delivery Report':'Monthly Delivery Report';
-    dateLabel='Period: '+excelDateLabel(period.from)+' to '+excelDateLabel(period.to);
-    headers=parcelHeaders;sheetName=type==='weekly'?'Weekly Report':'Monthly Report';
+    reportName=type==='weekly'?'Weekly Delivery Report':'Monthly Delivery Report';dateLabel='Period: '+excelDateLabel(period.from)+' to '+excelDateLabel(period.to);fileType=type==='weekly'?'Weekly':'Monthly';
   }else if(type==='transport'){
     const selectedTransport=$('reportTransport')?$('reportTransport').value:'';
     rows=allParcels.filter(p=>!selectedTransport||p.transportName===selectedTransport);
-    reportName='Transport-wise Report';
-    dateLabel='Report Date: '+excelDateLabel(today())+' | Transport: '+(selectedTransport||'All Transports');
-    headers=parcelHeaders;sheetName='Transport-wise';
+    reportName='Transport-wise Report';dateLabel='Transport: '+(selectedTransport||'All Transports');fileType='Transport_Wise';
   }else if(type==='opening'){
-    const o=opening(),used=usedOpening();
-    rows=openingHistory().map(x=>({
-      'Date & Time':x.date||'',
-      'Activity':x.activity||'',
-      'Amount Added / Changed (₹)':Number(x.amount||0),
-      'Balance After (₹)':Number(x.balance||0)
-    }));
-    reportName='Opening Balance Report';
-    dateLabel='Report Date: '+excelDateLabel(today())+' | Current Balance: '+money(o.balance)+' | Used: '+money(used)+' | Remaining: '+money(o.balance-used);
-    headers=historyHeaders;sheetName='Opening Balance';
-  }else{
-    alert('Invalid report type.');
-    return;
-  }
+    headers=historyHeaders;
+    rows=openingHistory().map(x=>({'Date & Time':x.date||'','Activity':x.activity||'','Amount Added / Changed (₹)':Number(x.amount||0),'Balance After (₹)':Number(x.balance||0)}));
+    reportName='Opening Balance Report';dateLabel='Report Date: '+excelDateLabel(today())+' | Current Balance: '+money(opening().balance)+' | Used: '+money(usedOpening());fileType='Opening_Balance';
+  }else{alert('Invalid report type.');return;}
 
-  const isOpening=type==='opening';
-  let aoa=[
-    ['NU EXPORTS'],
-    [reportName],
-    [dateLabel],
-    [],
-    headers
-  ];
+  // Excel-compatible HTML workbook: works without a third-party XLSX CDN/library.
+  const escCell=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const cell=(v,style='')=>'<td'+(style?' style="'+style+'"':'')+'>'+escCell(v)+'</td>';
+  const navy='background:#082653;color:#ffffff;font-weight:bold;font-size:18pt;text-align:center;padding:12px;';
+  const blue='background:#dceeff;color:#082653;font-weight:bold;text-align:center;padding:8px;';
+  const th='background:#0b4f9c;color:#ffffff;font-weight:bold;border:1px solid #082653;padding:8px;text-align:center;';
+  const td='border:1px solid #b8c7d9;padding:7px;';
+  let html='<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><table>';
+  html+='<tr><td colspan="'+headers.length+'" style="'+navy+'">NU EXPORTS</td></tr>';
+  html+='<tr><td colspan="'+headers.length+'" style="'+blue+'">'+escCell(reportName)+'</td></tr>';
+  html+='<tr><td colspan="'+headers.length+'" style="'+blue+'">'+escCell(dateLabel)+'</td></tr><tr><td colspan="'+headers.length+'">&nbsp;</td></tr>';
+  html+='<tr>'+headers.map(h=>'<th style="'+th+'">'+escCell(h)+'</th>').join('')+'</tr>';
   if(rows.length){
-    if(isOpening){
-      rows.forEach(x=>aoa.push(headers.map(h=>x[h]??'')));
-    }else{
-      rows.forEach(p=>aoa.push([
-        p.lrNumber||'',
-        p.transportName||'',
-        Number(p.articles||0),
-        Number(p.freight||0),
-        Number(p.localFreight||0)
-      ]));
-    }
+    rows.forEach(p=>{
+      let vals=type==='opening'?headers.map(h=>p[h]??''):[p.lrNumber||'',p.transportName||'',Number(p.articles||0),Number(p.freight||0),Number(p.localFreight||0),p.deliveryDate||''];
+      html+='<tr>'+vals.map(v=>cell(v,td)).join('')+'</tr>';
+    });
+  }else html+='<tr>'+cell('No records found',td)+(headers.length>1?'<td colspan="'+(headers.length-1)+'" style="'+td+'"></td>':'')+'</tr>';
+  if(type==='opening'){
+    const added=rows.reduce((sum,x)=>sum+(String(x.Activity||'').toLowerCase().includes('added')?Number(x['Amount Added / Changed (₹)']||0):0),0);
+    html+='<tr>'+cell('Total Transactions: '+rows.length,blue)+cell('Total Added (₹): '+added.toFixed(2),blue)+cell('Current Balance (₹): '+Number(opening().balance||0).toFixed(2),blue)+cell('',blue)+'</tr>';
   }else{
-    aoa.push([isOpening?'No opening balance history':'No records']);
+    const articles=rows.reduce((n,p)=>n+Number(p.articles||0),0),freight=rows.reduce((n,p)=>n+Number(p.freight||0),0),local=rows.reduce((n,p)=>n+Number(p.localFreight||0),0);
+    html+='<tr>'+cell('Total Parcels: '+rows.length,blue)+cell('',blue)+cell('Total Articles: '+articles,blue)+cell('Total Freight (₹): '+freight.toFixed(2),blue)+cell('Total Local Freight (₹): '+local.toFixed(2),blue)+(headers.length>5?cell('',blue):'')+'</tr>';
   }
-
-  if(isOpening){
-    const added=rows.reduce((s,x)=>s+(String(x.Activity||'').toLowerCase().includes('added')?Number(x['Amount Added / Changed (₹)']||0):0),0);
-    aoa.push(['Total Transactions: '+rows.length,'Total Added (₹): '+added.toFixed(2),'Current Balance (₹): '+Number(opening().balance||0).toFixed(2),'']);
-  }else{
-    const count=rows.length;
-    const articles=rows.reduce((s,p)=>s+Number(p.articles||0),0);
-    const freight=rows.reduce((s,p)=>s+Number(p.freight||0),0);
-    const local=rows.reduce((s,p)=>s+Number(p.localFreight||0),0);
-    aoa.push(['Total Parcels: '+count,'','Total Articles: '+articles,'Total Freight (₹): '+freight.toFixed(2),'Total Local Freight (₹): '+local.toFixed(2)]);
-  }
-
-  const ws=XLSX.utils.aoa_to_sheet(aoa);
-  const lastCol=headers.length-1;
-  ws['!merges']=[
-    {s:{r:0,c:0},e:{r:0,c:lastCol}},
-    {s:{r:1,c:0},e:{r:1,c:lastCol}},
-    {s:{r:2,c:0},e:{r:2,c:lastCol}}
-  ];
-  ws['!cols']=isOpening
-    ? [{wch:24},{wch:24},{wch:25},{wch:22}]
-    : [{wch:20},{wch:26},{wch:20},{wch:22},{wch:22}];
-  ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:4,c:0},e:{r:4,c:lastCol}})};
-  ws['!freeze']={xSplit:0,ySplit:5};
-
-  const navy={fill:{fgColor:{rgb:'082653'}},font:{bold:true,color:{rgb:'FFFFFF'},sz:16},alignment:{horizontal:'center',vertical:'center'}};
-  const lightBlue={fill:{fgColor:{rgb:'DCEEFF'}},font:{bold:true,color:{rgb:'082653'},sz:11},alignment:{horizontal:'center',vertical:'center'}};
-  const tableHead={fill:{fgColor:{rgb:'0B4F9C'}},font:{bold:true,color:{rgb:'FFFFFF'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'082653'}},bottom:{style:'thin',color:{rgb:'082653'}}}};
-  const totalStyle={fill:{fgColor:{rgb:'DCEEFF'}},font:{bold:true,color:{rgb:'082653'}},border:{top:{style:'thin',color:{rgb:'0B4F9C'}}}};
-  for(let c=0;c<=lastCol;c++){
-    const a=XLSX.utils.encode_cell({r:0,c}); if(ws[a])ws[a].s=navy;
-    const b=XLSX.utils.encode_cell({r:1,c}); if(ws[b])ws[b].s=lightBlue;
-    const d=XLSX.utils.encode_cell({r:2,c}); if(ws[d])ws[d].s=lightBlue;
-    const h=XLSX.utils.encode_cell({r:4,c}); if(ws[h])ws[h].s=tableHead;
-    const t=XLSX.utils.encode_cell({r:aoa.length-1,c}); if(ws[t])ws[t].s=totalStyle;
-  }
-  ws['!rows']=[{hpt:30},{hpt:23},{hpt:22},{hpt:10},{hpt:30}];
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,sheetName);
-  const fileType=type==='opening'?'Opening_Balance':type==='transport'?'Transport_Wise':type.charAt(0).toUpperCase()+type.slice(1);
-  const fileName='NU_EXPORTS_'+fileType+'_Report_'+today()+'.xlsx';
-
-  // Android Chrome-friendly download with SheetJS writer first, then Blob-link fallback.
+  html+='</table></body></html>';
+  const blob=new Blob(['\ufeff',html],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const fileName='NU_EXPORTS_'+fileType+'_Report_'+today()+'.xls';
   try{
-    if(!window.XLSX || !XLSX.writeFile) throw new Error('Excel library இன்னும் load ஆகவில்லை. Internet connection check செய்யவும்.');
-    try{
-      XLSX.writeFile(wb,fileName,{bookType:'xlsx',compression:true});
-    }catch(writeErr){
-      console.warn('writeFile fallback:',writeErr);
-      const binary=XLSX.write(wb,{bookType:'xlsx',type:'array'});
-      const blob=new Blob([binary],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-      const url=URL.createObjectURL(blob);
-      const link=document.createElement('a');
-      link.href=url;
-      link.download=fileName;
-      link.rel='noopener';
-      link.style.position='fixed';
-      link.style.left='-9999px';
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(()=>{URL.revokeObjectURL(url);link.remove();},60000);
-    }
-    alert(fileName+' download தொடங்கியது. Chrome → Downloads பகுதியில் பார்க்கவும்.');
-  }catch(err){
-    console.error('Excel export failed:',err);
-    alert('Excel download ஆகவில்லை: '+(err&&err.message?err.message:'Unknown error')+'. Internet connection / Chrome Downloads அனுமதியைச் சரிபார்க்கவும்.');
-  }
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download=fileName;a.style.display='none';document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},30000);
+    alert(fileName+' download தொடங்கியது. Chrome Downloads-ல் பார்க்கவும்.');
+  }catch(err){console.error(err);alert('Excel download தொடங்கவில்லை. Chrome-ல் இந்த தளத்திற்கான Downloads அனுமதியைச் சரிபார்க்கவும்.');}
 }
 function renderDaily(){let d=$('dailyDate').value,a=data().filter(p=>p.status==='Delivered'&&(!d||p.deliveryDate===d));let ar=a.reduce((s,p)=>s+p.articles,0),f=a.reduce((s,p)=>s+p.freight,0),l=a.reduce((s,p)=>s+p.localFreight,0);$('dp').textContent=a.length;$('da').textContent=ar;$('df').textContent=money(f);$('dl').textContent=money(l);$('dt').textContent=money(f+l);$('dailyBody').innerHTML=a.length?a.map(p=>`<tr><td>${esc(p.lrNumber)}</td><td>${esc(p.transportName)}</td><td>${p.articles}</td><td>${money(p.freight)}</td><td>${money(p.localFreight)}</td><td>${p.deliveryDate}</td></tr>`).join(''):`<tr><td colspan="6" class="empty">No delivery records</td></tr>`}function clearDaily(){$('dailyDate').value='';renderDaily()}
+function renderDateRange(){const from=$('rangeFrom').value,to=$('rangeTo').value;let a=data().filter(p=>p.status==='Delivered'&&(!from||String(p.deliveryDate||'')>=from)&&(!to||String(p.deliveryDate||'')<=to));if(from&&to&&from>to){$('dateRangeBody').innerHTML='<tr><td colspan="6" class="empty">From Date must be before To Date</td></tr>';return;}const ar=a.reduce((n,p)=>n+Number(p.articles||0),0),f=a.reduce((n,p)=>n+Number(p.freight||0),0),l=a.reduce((n,p)=>n+Number(p.localFreight||0),0);$('xdp').textContent=a.length;$('xda').textContent=ar;$('xdf').textContent=money(f);$('xdl').textContent=money(l);$('xdt').textContent=money(f+l);$('dateRangeBody').innerHTML=a.length?a.map(p=>`<tr><td>${esc(p.lrNumber)}</td><td>${esc(p.transportName)}</td><td>${Number(p.articles||0)}</td><td>${money(p.freight)}</td><td>${money(p.localFreight)}</td><td>${esc(p.deliveryDate||'')}</td></tr>`).join(''):'<tr><td colspan="6" class="empty">No delivery records for this date range</td></tr>';}
+function clearDateRange(){$('rangeFrom').value='';$('rangeTo').value='';renderDateRange()}
 function opts(){let a=trans();$('transports').innerHTML=a.map(x=>`<option value="${esc(x)}">`).join('');let s=$('reportTransport'),old=s.value;s.innerHTML='<option value="">All Transports</option>'+a.map(x=>`<option>${esc(x)}</option>`).join('');s.value=old}
 function renderReport(){let t=$('reportTransport').value,a=data().filter(p=>!t||p.transportName===t);$('rp').textContent=a.length;$('rpen').textContent=a.filter(p=>p.status==='Pending').length;$('rdel').textContent=a.filter(p=>p.status==='Delivered').length;$('rf').textContent=money(a.reduce((s,p)=>s+p.freight,0));$('rl').textContent=money(a.reduce((s,p)=>s+p.localFreight,0));$('reportBody').innerHTML=a.length?a.map(p=>`<tr><td>${esc(p.lrNumber)}</td><td>${p.articles}</td><td>${money(p.freight)}</td><td>${money(p.localFreight)}</td><td><span class="badge ${p.status.toLowerCase()}">${p.status}</span></td></tr>`).join(''):`<tr><td colspan="5" class="empty">No records</td></tr>`}
 function renderFolders(){let a=data();$('folders').innerHTML=trans().map(t=>{let x=a.filter(p=>p.transportName===t);return`<div class="card"><div onclick="reportFor(${JSON.stringify(t)})" style="cursor:pointer"><h3>📁 ${esc(t)}</h3><p>Total: ${x.length} &nbsp; Pending: ${x.filter(p=>p.status==='Pending').length} &nbsp; Delivered: ${x.filter(p=>p.status==='Delivered').length}</p><p class="small">Tap folder to open transport report</p></div><button class="btn danger" onclick="removeT(${JSON.stringify(t)})">🗑️ Delete Folder</button></div>`}).join('')||'<div class="card empty">No transport folders. Add one above.</div>'}function addFolderTransport(){let el=$('newFolderTransport');let n=el.value.trim();if(!n)return alert('Enter Transport Name.');let a=trans();if(a.some(x=>x.toLowerCase()===n.toLowerCase()))return alert('Transport folder already exists!');a.push(n);a.sort();saveT(a);el.value='';opts();renderTrans();renderFolders()}function reportFor(t){openPage('reportPage');$('reportTransport').value=t;renderReport()}
